@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3c.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui">
+<h:head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<meta name="viewport"
+		content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+</h:head>
+<h:body>
+	<h:form>
+		<p:growl id="growl" autoUpdate="true" />
+		<h:panelGrid columns="3">
+			<h:outputText value="バンド名" />
+			<p:inputText id="bandname" required="true" requiredMessage="バンド名を入力してください"
+				value="#{bandDao.bandname}" />
+			<p:watermark for="bandname" value="バンド名" id="bandnamePH" />
+			<h:outputText value="バンマス連絡先" />
+			<p:inputText id="email" required="true" requiredMessage="メールアドレスを入れてください"
+				validatorMessage="メールアドレスを入力してください" value="#{bandDao.email}">
+				<f:validateRegex
+					pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
+			</p:inputText>
+			<p:watermark for="email" value="メールアドレス" id="emailPH" />
+			<p:commandButton value="FB申込" update="growl, appInfo"
+				actionListener="#{bandDao.register}"></p:commandButton>
+			<p:commandButton value="順番確認" update="appInfo"
+				actionListener="#{bandDao.getAppList}" immediate="true"></p:commandButton>
+		</h:panelGrid>
+
+		<p:fieldset legend="申請状況">
+			<h:panelGrid columns="1" cellpadding="5">
+				<h:outputText value="#{bandDao.appInfo}" id="appInfo" escape="false" />
+			</h:panelGrid>
+		</p:fieldset>
+	</h:form>
+</h:body>
+</html>
