@@ -25,7 +25,7 @@ public class BandDao implements Serializable {
 	 */
 	private static final long serialVersionUID = 1804569931056271989L;
 //	private final static String INSERT = "insert into fantasia (bandname, email, appdate) values(?,?,now())";
-	private final static String SELECT_ALL = "select bandname, date_format(appdate,'%m/%e %H:%i') from fantasia order by appdate";
+	private final static String SELECT_ALL = "select bandname, date_format(appdate,'%m/%e %H:%i'), submitdate from fantasia order by appdate";
 	
 	private String bandname;
 	private String email;
@@ -97,7 +97,11 @@ public class BandDao implements Serializable {
 			ps = connection.prepareStatement(SELECT_ALL);
 			rs = ps.executeQuery();
 			while(rs.next()){
-				appList.add(rs.getString(1)+"("+rs.getString(2)+")");
+				String info = rs.getString(1)+"("+rs.getString(2)+")";
+				if(rs.getString(3) != null){
+					info = "<font color=\"#40AAEF\">" + info + "</font>";
+				}
+				appList.add(info);
 			}
 		} finally {
 			DbUtils.closeQuietly(connection, ps, rs);
