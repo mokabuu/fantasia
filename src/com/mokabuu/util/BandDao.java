@@ -24,14 +24,13 @@ public class BandDao implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1804569931056271989L;
-//	private final static String INSERT = "insert into fantasia (bandname, email, appdate) values(?,?,now())";
+	private final static String INSERT = "INSERT INTO fantasia (bandname, email, appdate) values (?, ?, CURTIME())";
 	private final static String SELECT_ALL = "select bandname, date_format(appdate,'%m/%e %H:%i'), submitdate from fantasia order by appdate";
 	
 	private String bandname;
 	private String email;
 	private ArrayList<String> appList = new ArrayList<String>();
 	private String appInfo = "";
-	protected Connection connection = null;
 	
 	public String getBandname() {
 		return bandname;
@@ -52,14 +51,16 @@ public class BandDao implements Serializable {
 		this.appInfo = appInfo;
 	}
 	
-	public void connect() throws SQLException {
+	private Connection connect() throws SQLException {
+		Connection con = null;
 		String url = "jdbc:mysql://localhost/my_db";
 		String user = "";
 		String password = "";
 
 		try {
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
-			connection = DriverManager.getConnection(url, user, password);
+			con = DriverManager.getConnection(url, user, password);
+			con.setAutoCommit(false);
 		} catch (ClassNotFoundException e) {
 			System.out.println("ClassNotFoundException:" + e.getMessage());
 		} catch (SQLException e) {
@@ -67,34 +68,40 @@ public class BandDao implements Serializable {
 		} catch (Exception e) {
 			System.out.println("Exception:" + e.getMessage());
 		}
+		
+		return con;
 	}
 	
 	FacesContext context = FacesContext.getCurrentInstance();
 
 	public void register() throws SQLException {
-		connect();
+		Connection con = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			ps = connection.prepareStatement("INSERT INTO fantasia (bandname, email, appdate) values (?, ?, CURTIME())");
+			con = connect();
+			ps = con.prepareStatement(INSERT);
 			ps.setString(1, bandname);
 			ps.setString(2, email);
-			int isSuccess = ps.executeUpdate();
-			if(isSuccess > 0){
+			ps.addBatch();
+			if(ps != null){
+				ps.executeBatch();
+				con.commit();
 				context.addMessage(null, new FacesMessage("【成功】" + bandname + "さんのFBを受け付けました。", "【成功】" + bandname + "さんのFBを受け付けました。"));
 			}
 		} finally {
-			DbUtils.closeQuietly(connection, ps, rs);
+			DbUtils.closeQuietly(con, ps, rs);
 		}
 		getAppList();
 	}
 	
 	public void getAppList() throws SQLException {
-		connect();
+		Connection con = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			ps = connection.prepareStatement(SELECT_ALL);
+			con = connect();
+			ps = con.prepareStatement(SELECT_ALL);
 			rs = ps.executeQuery();
 			while(rs.next()){
 				String info = rs.getString(1)+"("+rs.getString(2)+")";
@@ -104,7 +111,7 @@ public class BandDao implements Serializable {
 				appList.add(info);
 			}
 		} finally {
-			DbUtils.closeQuietly(connection, ps, rs);
+			DbUtils.closeQuietly(con, ps, rs);
 		}
 		StringBuffer sb = new StringBuffer();
 		sb.append("<ol>");
